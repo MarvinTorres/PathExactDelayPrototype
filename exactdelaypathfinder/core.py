@@ -5,7 +5,7 @@ class ExactDelayPathfinder:
         self._max_results = 0
         
         # Sets the limit of how many times a node can be visited when an edge
-        # is traversed. Can be change but not recommended to go above 3
+        # is traversed. Can be changed but not recommended to go above 1
         self._visit_limit = 1
 
     def search(self, graph, total_delay, start, end, max_results=10):
@@ -39,13 +39,10 @@ class ExactDelayPathfinder:
         for node in self._graph.nodes:
             visits[str(node)] = 0
 
-        # Assume the starting node is visited at this point
-        visits[start] = 1 
-
         # Find paths that have delays close to the requested delay. The one in front of the list has
         # the closest matching delay of the lot.
         self._search(total_delay, start, end, [], visits)
-        
+
         # Format result to list each path along with their total delays
         result = []
 
@@ -62,15 +59,19 @@ class ExactDelayPathfinder:
                 path.append(curr)
                 # The path in front is the one with the lowest error
                 self._paths.insert(0, {"path":path.copy(), "error":error, "offset":delay})
+                # Clean up after the target was reached
+                del path[-1]
                 # Ensure that the list is at most the specified number elements in length (default is 10)
                 if len(self._paths) > self._max_results:
                     del self._paths[-1]
             return
+        path.append(curr) # Found a potential path with this as the starting node
+        visits[str(curr)] += 1
+
         for neighbor in list(self._graph.neighbors(curr)):
             if (visits[str(neighbor)] < self._visit_limit):
-                visits[str(neighbor)] += 1
                 edge_delay = self._graph.edges[curr, neighbor]['delay']
-                path.append(curr) # Found a potential path with this as the starting node
                 self._search(delay - edge_delay, neighbor, target, path, visits)
-                del path[-1] # Clean up after an end was reached (target or dead end)
-                visits[str(neighbor)] -= 1
+
+        del path[-1] # Clean up after a dead end was reached
+        visits[str(curr)] -= 1
