@@ -52,7 +52,7 @@ class ExactDelayPathfinder:
         return result
 
     def _search(self, delay, curr, target, path, visits):
-        if (curr == target and path != []):
+        if curr == target and path != []:
             error = abs(delay) # The target was reached
             if not bool(self._paths) or error < self._paths[0]["error"]:
                 # The path is the node itself
@@ -69,8 +69,9 @@ class ExactDelayPathfinder:
         visits[str(curr)] += 1
 
         for neighbor in list(self._graph.neighbors(curr)):
-            if (visits[str(neighbor)] < self._visit_limit):
-                edge_delay = self._graph.edges[curr, neighbor]['delay']
+            if visits[str(neighbor)] < self._visit_limit:
+                # edge_delay = self._graph.edges[curr, neighbor]['delay']
+                edge_delay = self._graph[curr][neighbor].get('delay', 0)
                 self._search(delay - edge_delay, neighbor, target, path, visits)
 
         del path[-1] # Clean up after a dead end was reached
